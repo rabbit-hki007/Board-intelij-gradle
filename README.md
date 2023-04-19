@@ -42,5 +42,3 @@ from information_schema.table_constraints
 where table_name = 'tb_comment';
 
 추가적으로, 특정 테이블이 아닌 DB(스키마)의 모든 제약 조건을 확인하고 싶을 때는 조건절에 table_schema = '스키마 이름'을 입력해 주시면 됩니다.
-
-최종본입니다
