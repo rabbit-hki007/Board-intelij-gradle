@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.study.domain.post.PostMapper">
+    <!--아래 resultMap을 사용하려면 PostResponse에 @Settter를 에러없이 걸어야 사용 가능하다-->
+    <resultMap id="postResponse" type="com.study.domain.post.PostResponse">
+		<result property="id" column="id" />
+		<result property="title" column="title"/>
+		<result property="content" column="content"/>
+		<result property="writer" column="writer"/>
+		<result property="viewCnt" column="view_cnt"/>
+        <result property="noticeYn" column="notice_yn"/>
+        <result property="deleteYn" column="delete_yn"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="modifiedDate" column="modified_date"/>
+	</resultMap>
+    <!-- tb_post 테이블 전체 컬럼 -->
+    <sql id="postColumns">
+          id
+        , title
+        , content
+        , writer
+        , view_cnt
+        , notice_yn
+        , delete_yn
+        , created_date
+        , modified_date
+    </sql>
+
+    <!-- 게시글 검색 sql 시작 게시글 리스트와 전체 갯수 카운트에서 include 해서 사용함 -->
+    <sql id="search">
+        <!-- 검색 키워드가 있을 때 -->
+        <if test="keyword != null and keyword != ''">
+            <choose>
+                <!-- 검색 유형이 있을 때 -->
+                <when test="searchType != null and searchType != ''">
+                    <choose>
+                        <when test="'title'.equals( searchType )">
+                            AND title LIKE CONCAT('%', #{keyword}, '%')
+                        </when>
+                        <when test="'content'.equals( searchType )">
+                            AND content LIKE CONCAT('%', #{keyword}, '%')
+                        </when>
+                        <when test="'writer'.equals( searchType )">
+                            AND writer LIKE CONCAT('%', #{keyword}, '%')
+                        </when>
+                    </choose>
+                </when>
+
+                <!-- 전체 검색일 때 -->
+                <otherwise>
+                    AND (
+                           title LIKE CONCAT('%', #{keyword}, '%')
+                        OR content LIKE CONCAT('%', #{keyword}, '%')
+                        OR writer LIKE CONCAT('%', #{keyword}, '%')
+                    )
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+    <!-- 게시글 검색 sql 끝-->
+
+    <!-- 게시글 저장 -->
+    <!-- 게시글 저장 -->
+    <!-- id값도 쿼리에 포함시킬때는 아래처럼 넣어야 함 <insert id="save" parameterType="com.study.domain.post.PostRequest">-->
+    <insert id="save" parameterType="com.study.domain.post.PostRequest" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tb_post (
+            <include refid="postColumns" />
+        ) VALUES (
+              #{id}
+            , #{title}
+            , #{content}
+            , #{writer}
+            , 0
+            , #{noticeYn}
+            , 0
+            , NOW()
+            , NULL
+        )
+    </insert>
+
+
+    <!-- 게시글 상세정보 조회 -->
+    <select id="findById" parameterType="long" resultType="com.study.domain.post.PostResponse">
+        SELECT
+            <include refid="postColumns" />
+        FROM
+            tb_post
+        WHERE
+            id = #{value}
+    </select>
+
+
+    <!-- 게시글 수정 -->
+    <update id="update" parameterType="com.study.domain.post.PostRequest">
+        UPDATE tb_post
+        SET
+              modified_date = NOW()
+            , title = #{title}
+            , content = #{content}
+            , writer = #{writer}
+            , notice_yn = #{noticeYn}
+        WHERE
+            id = #{id}
+    </update>
+
+
+    <!-- 게시글 삭제 -->
+    <delete id="deleteById" parameterType="long">
+        UPDATE tb_post
+        SET
+            delete_yn = 1
+        WHERE
+            id = #{id}
+    </delete>
+
+    <!-- 게시글 리스트 조회 -->
+    <!-- 이것은 return 값이 resultType 일때 <select id="findAll" resultType="com.study.domain.post.PostResponse">-->
+    <!--<select id="findAll" resultMap="postResponse">
+        SELECT
+            <include refid="postColumns" />
+        FROM
+            tb_post
+        WHERE
+            delete_yn = 0
+        ORDER BY
+            id DESC
+    </select>  페이징 기능 전-->
+
+    <!-- 아래는 페이징 기능을 위한 것으로 변경 (페이징 처리를 위한 것)-->
+    <!-- 이것은 return 값이 resultType 일때 <select id="findAll" parameterType="com.study.common.dto.SearchDto" resultType="com.study.domain.post.PostResponse"> -->
+    <!--<select id="findAll" parameterType="com.study.common.dto.SearchDto" resultMap="postResponse">
+        SELECT
+            <include refid="postColumns" />
+        FROM
+            tb_post
+        WHERE
+            delete_yn = 0
+        ORDER BY
+            id DESC
+        LIMIT #{offset}, #{recordSize} &lt;!&ndash;  page를 3으로, recordSize를 10으로 가정해보면 (3 - 1) * 10 = 20입니다. 즉, 현재 페이지 번호가 3이라면 "LIMIT 20, 10"으로 쿼리가 실행되며, 결론적으로 offset은 조회할 데이터의 시작 위치(몇 번째 데이터부터 조회할 것인지)를 의미합니다.&ndash;&gt;
+    </select>-->
+
+    <!-- 게시글 리스트 조회 -->
+    <select id="findAll" parameterType="com.study.common.dto.SearchDto" resultType="com.study.domain.post.PostResponse">
+        SELECT
+            <include refid="postColumns" />
+        FROM
+            tb_post
+        WHERE
+            delete_yn = 0
+            <include refid="search" />
+        ORDER BY
+            id DESC
+        LIMIT #{pagination.limitStart}, #{recordSize} <!--page를 3으로, recordSize를 10으로 가정해보면 (3 - 1) * 10 = 20입니다. 즉, 현재 페이지 번호가 3이라면 "LIMIT 20, 10"으로 쿼리가 실행되며, 결론적으로 offset은 조회할 데이터의 시작 위치(몇 번째 데이터부터 조회할 것인지)를 의미합니다.-->
+    </select>
+
+
+    <!-- 게시글 수 카운팅 -->
+    <select id="count" parameterType="com.study.common.dto.SearchDto" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            tb_post
+        WHERE
+            delete_yn = 0
+            <include refid="search" />
+    </select>
+
+</mapper>
