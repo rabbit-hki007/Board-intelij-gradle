@@ -1,5 +1,10 @@
 # Board-intelij-gradle
 
+본 Repository는 intelij를 이용한 클론 크딩입니다
+
+intelij 학습을 위한 Clone Coding을 하였으며 참고 사이트는 도뎡이님의 블로그를 참고 하였음
+참고 사이트 : https://congsong.tistory.com/12
+
 intelij를 이용한 게시판 (댓글기능) 
 DB : Maria DB 사용하였음
 
