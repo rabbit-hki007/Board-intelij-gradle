@@ -258,7 +258,11 @@
                                         <!--33강에서 수정된 버튼 시작 &#45;&#45; Layer Popup실행을 위한 onclick 함수가 있음-->
                                         <button type="button" onclick="openCommentUpdatePopup(${row.id});" class="btns"><span class="icons icon_modify">수정</span></button>
                                         <!--33강에서 수정된 버튼 끝 -->
-                                        <button type="button" class="btns"><span class="icons icon_del">삭제</span></button>
+
+                                        <!--34강 전에 쓰던 버튼 <button type="button" class="btns"><span class="icons icon_del">삭제</span></button>-->
+                                        <!--34강에서 수정된 delete button 시작-->
+                                        <button type="button" onclick="deleteComment(${row.id});" class="btns"><span class="icons icon_del">삭제</span></button>
+                                        <!--34강에서 수정된 delete button 끝-->
                                     </p>
                                 </div>
                             `;
@@ -341,6 +345,32 @@
                 })
             }
             // 33강의 Layer 팝업의 댓글 수정 버튼의 동작을 위한 함수 끝
+
+            // 34강의 댓글 수정 버튼의 동작을 위한 함수 시작
+            // 댓글 삭제
+            function deleteComment(id) {
+
+                if ( !confirm('선택하신 댓글을 삭제할까요?') ) {
+                    return false;
+                }
+
+                const postId = [[ ${post.id} ]];
+
+                $.ajax({
+                    url : `/posts/${postId}/comments/${id}`,
+                    type : 'delete',
+                    dataType : 'json',
+                    async : false,
+                    success : function (response) {
+                        alert('삭제되었습니다.');
+                        findAllComment();
+                    },
+                    error : function (request, status, error) {
+                        console.log(error)
+                    }
+                })
+            }
+            // 34강의 댓글 수정 버튼의 동작을 위한 함수 끝
 
         /*]]>*/
 
